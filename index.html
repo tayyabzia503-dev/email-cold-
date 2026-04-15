@@ -212,8 +212,16 @@ tr:hover td{background:rgba(99,102,241,.03)}
     <div style="margin-bottom:16px"><label class="label">Your Email</label><input class="input" id="setEmail" placeholder="your@gmail.com"></div>
     <div style="margin-bottom:16px"><label class="label">Company Name</label><input class="input" id="setCompany" value="Vital Web Solution"></div>
     <div style="margin-bottom:16px"><label class="label">Company Website</label><input class="input" id="setUrl" value="https://vitalwebsolution.com"></div>
+    <div style="background:rgba(99,102,241,.05);border-radius:12px;padding:16px;margin-bottom:16px;border:1px solid rgba(99,102,241,.15)">
+      <div style="font-size:13px;font-weight:600;color:#a5b4fc;margin-bottom:6px">🔑 Anthropic API Key (Required)</div>
+      <div style="font-size:12px;color:#94a3b8;line-height:1.6;margin-bottom:10px">
+        Get your key from <a href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com</a> → API Keys → Create Key. Stored locally in your browser only.
+      </div>
+      <input class="input mono" id="setApiKey" type="password" placeholder="sk-ant-api03-..." style="font-size:13px">
+      <div id="apiKeyStatus" style="font-size:11px;margin-top:6px;color:#4b5563"></div>
+    </div>
     <div style="background:rgba(34,197,94,.05);border-radius:12px;padding:16px;margin-bottom:16px;border:1px solid rgba(34,197,94,.15)">
-      <div style="font-size:13px;font-weight:600;color:#4ade80;margin-bottom:6px">Gmail Compose (No Setup Needed)</div>
+      <div style="font-size:13px;font-weight:600;color:#4ade80;margin-bottom:6px">📨 Gmail Compose (No Setup Needed)</div>
       <div style="font-size:12px;color:#94a3b8;line-height:1.6">Clicking "Send" opens a Gmail compose tab with email pre-filled. Just review and hit send. For bulk send, allow popups.</div>
     </div>
     <div style="margin-bottom:16px">
@@ -278,6 +286,41 @@ let logs = [];
 let processing = {};
 let selectedLeads = new Set();
 let editingLeadId = null;
+
+// ─── API KEY MANAGEMENT ───
+function getApiKey() {
+  const input = document.getElementById('setApiKey');
+  const key = input ? input.value.trim() : '';
+  if (key) localStorage.setItem('anthropic_api_key', key);
+  return key || localStorage.getItem('anthropic_api_key') || '';
+}
+function loadApiKey() {
+  const saved = localStorage.getItem('anthropic_api_key');
+  if (saved) {
+    const input = document.getElementById('setApiKey');
+    if (input) {
+      input.value = saved;
+      document.getElementById('apiKeyStatus').innerHTML = '<span style="color:#4ade80">✓ Key saved</span>';
+    }
+  }
+}
+// Load on page ready
+document.addEventListener('DOMContentLoaded', loadApiKey);
+// Save when changed
+document.addEventListener('DOMContentLoaded', () => {
+  const input = document.getElementById('setApiKey');
+  if (input) input.addEventListener('input', () => {
+    const key = input.value.trim();
+    if (key.startsWith('sk-')) {
+      localStorage.setItem('anthropic_api_key', key);
+      document.getElementById('apiKeyStatus').innerHTML = '<span style="color:#4ade80">✓ Key saved</span>';
+    } else if (key) {
+      document.getElementById('apiKeyStatus').innerHTML = '<span style="color:#fca5a5">Key should start with sk-</span>';
+    } else {
+      document.getElementById('apiKeyStatus').innerHTML = '';
+    }
+  });
+});
 
 // ─── CSV PARSER ───
 function parseCSV(text) {
@@ -414,11 +457,13 @@ function handleFileUpload(e) {
 // ─── ANALYZE WEBSITE ───
 async function analyzeWebsite(lead) {
   if (!lead.website) { addLog(`No website for ${lead.name||'lead'} — skipping`, 'warn'); return null; }
+  const apiKey = getApiKey();
+  if (!apiKey) { addLog('Add your Anthropic API key in Settings first!', 'error'); toggleSettings(); return null; }
   setProcessing(lead.id, 'analyzing');
   addLog(`Analyzing ${lead.website}...`);
   try {
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
-      method:'POST', headers:{'Content-Type':'application/json'},
+    const resp = await fetch('/api/claude', {
+      method:'POST', headers:{'Content-Type':'application/json','x-api-key':apiKey},
       body: JSON.stringify({
         model:'claude-sonnet-4-20250514', max_tokens:1000,
         tools:[{type:'web_search_20250305',name:'web_search'}],
@@ -456,11 +501,13 @@ Respond in this exact JSON format only, no markdown:
 async function generateEmail(lead) {
   setProcessing(lead.id, 'generating');
   addLog(`Generating email for ${lead.name||lead.email}...`);
+  const apiKey = getApiKey();
+  if (!apiKey) { addLog('Add your Anthropic API key in Settings first!', 'error'); clearProcessing(lead.id); return null; }
   try {
     const pitch = document.getElementById('setPitch').value;
     const subjectTpl = document.getElementById('setSubject').value;
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
-      method:'POST', headers:{'Content-Type':'application/json'},
+    const resp = await fetch('/api/claude', {
+      method:'POST', headers:{'Content-Type':'application/json','x-api-key':apiKey},
       body: JSON.stringify({
         model:'claude-sonnet-4-20250514', max_tokens:1000,
         messages:[{role:'user',content:`You are Ammar Haq, Founder of Vital Web Solution. Write a cold email to this lead.
@@ -769,6 +816,15 @@ function renderLogs() {
 
 // Initial render
 renderAll();
+
+// Show settings on first load if no API key
+setTimeout(() => {
+  loadApiKey();
+  if (!getApiKey()) {
+    toggleSettings();
+    addLog('Welcome! Add your Anthropic API key in Settings to get started.', 'warn');
+  }
+}, 300);
 </script>
 </body>
 </html>
