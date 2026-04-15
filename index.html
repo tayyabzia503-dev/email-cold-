@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cold Email Engine — Vital Web Solution</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(99,102,241,.3);border-radius:3px}
+body{background:#0a0a0f;color:#e0e0e8;font-family:'DM Sans',sans-serif;min-height:100vh}
+a{color:#818cf8;text-decoration:none}
+input,textarea,select{font-family:'DM Sans',sans-serif}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* Header */
+.header{background:linear-gradient(135deg,#0d0d14,#12121f);border-bottom:1px solid rgba(99,102,241,.15);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;backdrop-filter:blur(20px)}
+.logo{display:flex;align-items:center;gap:12px}
+.logo-icon{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center;box-shadow:0 0 20px rgba(99,102,241,.3)}
+.logo-text{font-size:20px;font-weight:700;background:linear-gradient(135deg,#c7d2fe,#a5b4fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.logo-sub{font-size:11px;color:#64748b;margin-top:2px}
+
+/* Container */
+.container{max-width:1200px;margin:0 auto;padding:24px}
+
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+.stat{background:rgba(15,15,25,.6);border:1px solid rgba(99,102,241,.08);border-radius:12px;padding:16px 20px;text-align:center}
+.stat-num{font-size:28px;font-weight:700;background:linear-gradient(135deg,#c7d2fe,#a5b4fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.stat-label{font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin-top:4px}
+
+/* Tabs */
+.tabs{display:flex;gap:0;margin-bottom:24px;background:rgba(15,15,25,.6);border-radius:12px;padding:4px;border:1px solid rgba(99,102,241,.1)}
+.tab{padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;flex:1;text-align:center;transition:all .2s;background:transparent;color:#64748b}
+.tab.active{background:linear-gradient(135deg,#6366f1,#7c3aed);color:#fff;box-shadow:0 2px 10px rgba(99,102,241,.3)}
+
+/* Cards */
+.card{background:rgba(17,17,28,.8);border:1px solid rgba(99,102,241,.1);border-radius:16px;padding:24px;margin-bottom:20px;backdrop-filter:blur(10px)}
+.card-title{font-size:14px;font-weight:600;color:#a5b4fc;margin-bottom:16px;text-transform:uppercase;letter-spacing:1px;display:flex;align-items:center;gap:8px}
+
+/* Inputs */
+.input{width:100%;padding:10px 14px;background:rgba(15,15,25,.9);border:1px solid rgba(99,102,241,.2);border-radius:10px;color:#e0e0e8;font-size:14px;outline:none;transition:border-color .2s}
+.input:focus{border-color:rgba(99,102,241,.5)}
+.textarea{width:100%;padding:12px 14px;background:rgba(15,15,25,.9);border:1px solid rgba(99,102,241,.2);border-radius:10px;color:#e0e0e8;font-size:14px;outline:none;resize:vertical;min-height:100px;line-height:1.6}
+.textarea:focus{border-color:rgba(99,102,241,.5)}
+.label{font-size:12px;font-weight:500;color:#94a3b8;margin-bottom:6px;display:block;text-transform:uppercase;letter-spacing:.5px}
+
+/* Buttons */
+.btn{padding:10px 20px;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:all .2s;font-family:'DM Sans',sans-serif}
+.btn:hover{opacity:.9;transform:translateY(-1px)}
+.btn-primary{background:linear-gradient(135deg,#6366f1,#7c3aed);color:#fff;box-shadow:0 0 20px rgba(99,102,241,.2)}
+.btn-green{background:linear-gradient(135deg,#059669,#10b981);color:#fff}
+.btn-red{background:linear-gradient(135deg,#dc2626,#ef4444);color:#fff}
+.btn-sm{padding:8px 16px;font-size:13px;font-weight:500;background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.2);color:#a5b4fc;border-radius:8px}
+.btn-send{padding:6px 12px;font-size:12px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.2);color:#4ade80;border-radius:8px}
+.btn-danger{padding:6px 12px;font-size:12px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);color:#fca5a5;border-radius:8px}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+
+/* Badges */
+.badge{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.badge-gray{background:rgba(148,163,184,.15);color:#94a3b8}
+.badge-yellow{background:rgba(250,204,21,.15);color:#fde047}
+.badge-blue{background:rgba(99,102,241,.15);color:#a5b4fc}
+.badge-green{background:rgba(34,197,94,.15);color:#4ade80}
+
+/* Table */
+table{width:100%;border-collapse:separate;border-spacing:0}
+th{padding:10px 14px;text-align:left;font-size:11px;font-weight:600;color:#6366f1;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid rgba(99,102,241,.15)}
+td{padding:12px 14px;font-size:13px;border-bottom:1px solid rgba(99,102,241,.06);vertical-align:top}
+tr:hover td{background:rgba(99,102,241,.03)}
+.lead-name{font-weight:600;color:#e0e0e8}
+.lead-notes{font-size:11px;color:#f59e0b;margin-top:2px}
+.lead-industry{font-size:11px;color:#64748b;margin-top:2px}
+.muted{color:#4b5563}
+.mono{font-family:'JetBrains Mono',monospace}
+
+/* Modal */
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:100;backdrop-filter:blur(4px)}
+.modal{background:#11111c;border:1px solid rgba(99,102,241,.2);border-radius:20px;padding:28px;max-width:600px;width:90%;max-height:80vh;overflow-y:auto}
+
+/* Spinner */
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
+
+/* Log */
+.log-entry{padding:8px 12px;border-bottom:1px solid rgba(99,102,241,.05);display:flex;align-items:center;gap:10px;font-size:13px;animation:fadeIn .3s ease}
+.log-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.log-time{font-family:'JetBrains Mono',monospace;font-size:11px;color:#4b5563;min-width:75px}
+
+/* Actions row */
+.actions{display:flex;gap:6px;flex-wrap:wrap}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
+/* Email preview card */
+.email-card{animation:fadeIn .3s ease}
+.email-body{padding:12px 16px;background:rgba(15,15,25,.6);border-radius:10px;border:1px solid rgba(99,102,241,.08)}
+.email-subject{font-size:13px;font-weight:600;color:#a5b4fc;margin-bottom:8px}
+.email-text{font-size:13px;line-height:1.7;white-space:pre-wrap;color:#c8ccd4}
+
+/* Responsive */
+@media(max-width:768px){
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .container{padding:12px}
+  .header{padding:12px 16px}
+  td,th{padding:8px 10px;font-size:12px}
+}
+.hidden{display:none}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="logo">
+    <div class="logo-icon">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+    </div>
+    <div>
+      <div class="logo-text">Cold Email Engine</div>
+      <div class="logo-sub">by Vital Web Solution</div>
+    </div>
+  </div>
+  <button class="btn btn-sm" onclick="toggleSettings()">⚙ Settings</button>
+</div>
+
+<div class="container">
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat"><div class="stat-num" id="stat-total">0</div><div class="stat-label">Total Leads</div></div>
+    <div class="stat"><div class="stat-num" id="stat-analyzed">0</div><div class="stat-label">Analyzed</div></div>
+    <div class="stat"><div class="stat-num" id="stat-ready">0</div><div class="stat-label">Ready to Send</div></div>
+    <div class="stat"><div class="stat-num" id="stat-sent">0</div><div class="stat-label">Sent</div></div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" data-tab="leads" onclick="switchTab('leads')">Leads</button>
+    <button class="tab" data-tab="emails" onclick="switchTab('emails')">Email Preview</button>
+    <button class="tab" data-tab="logs" onclick="switchTab('logs')">Activity Log</button>
+  </div>
+
+  <!-- LEADS TAB -->
+  <div id="tab-leads">
+    <div class="card">
+      <div class="card-title">📤 Import Leads</div>
+      <div class="btn-row">
+        <input type="file" id="csvInput" accept=".csv,.tsv,.txt" onchange="handleFileUpload(event)" style="display:none">
+        <button class="btn btn-primary" onclick="document.getElementById('csvInput').click()">⬆ Upload CSV</button>
+        <button class="btn btn-sm" onclick="showAddLeadModal()">+ Add Lead Manually</button>
+        <div style="flex:1"></div>
+        <button class="btn btn-green" id="btnProcess" onclick="bulkProcess()" style="display:none">🔍 Analyze & Generate All</button>
+        <button class="btn btn-red" id="btnSendAll" onclick="bulkSendAll()" style="display:none">📨 Open All in Gmail (<span id="readyCount">0</span>)</button>
+      </div>
+      <div style="margin-top:10px;font-size:12px;color:#64748b">
+        Auto-detects columns — works with any CSV format. <span class="mono" style="color:#a5b4fc">Extracts URLs, emails, phones automatically</span>
+      </div>
+    </div>
+
+    <div class="card" id="leadsTableCard" style="padding:0;overflow:auto;display:none">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:30px"><input type="checkbox" id="selectAll" onchange="toggleSelectAll()"></th>
+            <th>Lead</th>
+            <th>Website</th>
+            <th>Facebook</th>
+            <th>Email / Phone</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="leadsBody"></tbody>
+      </table>
+    </div>
+
+    <div class="card" id="emptyState" style="text-align:center;padding:60px">
+      <div style="font-size:16px;color:#64748b">No leads yet</div>
+      <div style="font-size:13px;color:#4b5563;margin-top:4px">Upload a CSV or add leads manually to get started</div>
+    </div>
+  </div>
+
+  <!-- EMAILS TAB -->
+  <div id="tab-emails" class="hidden">
+    <div id="emailsList"></div>
+    <div class="card" id="noEmails" style="text-align:center;padding:60px">
+      <div style="font-size:16px;color:#64748b">No emails generated yet</div>
+      <div style="font-size:13px;color:#4b5563;margin-top:4px">Go to Leads tab and click "Analyze & Generate"</div>
+    </div>
+  </div>
+
+  <!-- LOGS TAB -->
+  <div id="tab-logs" class="hidden">
+    <div class="card">
+      <div class="card-title">Activity Log</div>
+      <div id="logsContainer" style="max-height:500px;overflow-y:auto">
+        <div style="color:#4b5563;font-size:13px;text-align:center;padding:40px">No activity yet</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Settings Modal -->
+<div class="modal-overlay hidden" id="settingsModal" onclick="toggleSettings()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <h3 style="font-size:18px;font-weight:700;color:#e0e0e8">Settings</h3>
+      <button class="btn btn-sm" onclick="toggleSettings()" style="padding:4px 10px">✕</button>
+    </div>
+    <div style="margin-bottom:16px"><label class="label">Your Name</label><input class="input" id="setName" value="Ammar Haq"></div>
+    <div style="margin-bottom:16px"><label class="label">Your Email</label><input class="input" id="setEmail" placeholder="your@gmail.com"></div>
+    <div style="margin-bottom:16px"><label class="label">Company Name</label><input class="input" id="setCompany" value="Vital Web Solution"></div>
+    <div style="margin-bottom:16px"><label class="label">Company Website</label><input class="input" id="setUrl" value="https://vitalwebsolution.com"></div>
+    <div style="background:rgba(34,197,94,.05);border-radius:12px;padding:16px;margin-bottom:16px;border:1px solid rgba(34,197,94,.15)">
+      <div style="font-size:13px;font-weight:600;color:#4ade80;margin-bottom:6px">Gmail Compose (No Setup Needed)</div>
+      <div style="font-size:12px;color:#94a3b8;line-height:1.6">Clicking "Send" opens a Gmail compose tab with email pre-filled. Just review and hit send. For bulk send, allow popups.</div>
+    </div>
+    <div style="margin-bottom:16px">
+      <label class="label">Default Subject Template</label>
+      <input class="input" id="setSubject" value="Quick thought on {{company}}'s website">
+      <div style="font-size:11px;color:#4b5563;margin-top:4px">Use {{company}}, {{firstName}} as placeholders</div>
+    </div>
+    <div style="margin-bottom:16px">
+      <label class="label">Default Email Pitch Template</label>
+      <textarea class="textarea" id="setPitch" style="min-height:200px">Hi {{firstName}},
+
+I took a look at {{website}} and noticed a few things that could be costing you leads:
+
+{{analysis}}
+
+At Vital Web Solution, we specialize in turning websites into lead-generating machines. We've helped businesses like yours increase conversions by 40-60% through better landing pages, faster load times, and smarter design.
+
+Would you be open to a quick 15-minute call this week? I'd love to show you exactly what we'd fix — no strings attached.
+
+Best,
+Ammar Haq
+Founder, Vital Web Solution</textarea>
+      <div style="font-size:11px;color:#4b5563;margin-top:4px">Variables: {{firstName}}, {{website}}, {{company}}, {{analysis}}</div>
+    </div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="toggleSettings()">Save Settings</button>
+  </div>
+</div>
+
+<!-- Add Lead Modal -->
+<div class="modal-overlay hidden" id="addLeadModal" onclick="hideAddLeadModal()">
+  <div class="modal" style="max-width:450px" onclick="event.stopPropagation()">
+    <h3 style="font-size:18px;font-weight:700;color:#e0e0e8;margin-bottom:20px">Add Lead</h3>
+    <div style="margin-bottom:14px"><label class="label">Business Name</label><input class="input" id="newName" placeholder="Acme Corp"></div>
+    <div style="margin-bottom:14px"><label class="label">Email (optional)</label><input class="input" id="newEmail" placeholder="contact@example.com"></div>
+    <div style="margin-bottom:14px"><label class="label">Website URL</label><input class="input" id="newWebsite" placeholder="https://example.com"></div>
+    <div style="margin-bottom:14px"><label class="label">Facebook Link</label><input class="input" id="newFacebook" placeholder="https://facebook.com/example"></div>
+    <div style="display:flex;gap:10px;margin-top:6px">
+      <button class="btn btn-sm" onclick="hideAddLeadModal()">Cancel</button>
+      <button class="btn btn-primary" style="flex:1;justify-content:center" onclick="addManualLead()">Add Lead</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Email Modal -->
+<div class="modal-overlay hidden" id="editEmailModal" onclick="hideEditModal()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <h3 style="font-size:18px;font-weight:700;color:#e0e0e8;margin-bottom:16px" id="editTitle">Edit Email</h3>
+    <div style="margin-bottom:14px"><label class="label">Subject</label><input class="input" id="editSubject"></div>
+    <div style="margin-bottom:14px"><label class="label">Email Body</label><textarea class="textarea" id="editBody" style="min-height:250px"></textarea></div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-sm" onclick="hideEditModal()">Close</button>
+      <button class="btn btn-sm" onclick="regenerateEditing()">🔄 Regenerate</button>
+      <button class="btn btn-primary" style="flex:1;justify-content:center" onclick="saveAndCopyEdit()">📋 Copy & Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── STATE ───
+let leads = [];
+let logs = [];
+let processing = {};
+let selectedLeads = new Set();
+let editingLeadId = null;
+
+// ─── CSV PARSER ───
+function parseCSV(text) {
+  const records = [];
+  let current = '', inQuotes = false, fields = [];
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (ch === '"') {
+      if (inQuotes && text[i+1] === '"') { current += '"'; i++; }
+      else inQuotes = !inQuotes;
+    } else if (ch === ',' && !inQuotes) {
+      fields.push(current); current = '';
+    } else if ((ch === '\r' || ch === '\n') && !inQuotes) {
+      if (ch === '\r' && text[i+1] === '\n') i++;
+      fields.push(current); current = '';
+      if (fields.some(f => f.trim())) records.push(fields);
+      fields = [];
+    } else {
+      current += ch;
+    }
+  }
+  fields.push(current);
+  if (fields.some(f => f.trim())) records.push(fields);
+  if (records.length < 2) return [];
+
+  let headerIdx = 0;
+  for (let i = 0; i < Math.min(records.length, 5); i++) {
+    const rowLower = records[i].map(c => c.trim().toLowerCase()).join('|');
+    if (rowLower.includes('task') || rowLower.includes('website') || rowLower.includes('facebook') || rowLower.includes('email')) {
+      headerIdx = i; break;
+    }
+  }
+  const headers = records[headerIdx].map(h => h.trim().toLowerCase().replace(/[✓✗☐☑]/g, '').trim());
+  return records.slice(headerIdx + 1).map(fields => {
+    const row = {};
+    headers.forEach((h, i) => { row[h] = (fields[i] || '').trim(); });
+    return row;
+  });
+}
+
+// ─── EXTRACTORS ───
+function extractWebsite(text) {
+  if (!text) return '';
+  const cleaned = text.replace(/[\r\n]+/g, ' ').trim();
+  const urlMatch = cleaned.match(/https?:\/\/[^\s,;"'<>]+/i);
+  if (urlMatch) return urlMatch[0].replace(/[\/\s#]+$/, '');
+  const domainMatch = cleaned.match(/(?:www\.)?([a-z0-9][-a-z0-9]*\.)+(com|net|org|au|uk|nz|ca|io|co)(?:\.[a-z]{2,})?/i);
+  if (domainMatch) return 'https://' + domainMatch[0];
+  return '';
+}
+function extractPhone(text) {
+  if (!text) return '';
+  const m = text.match(/\+?\d[\d\s\-()]{7,}/);
+  return m ? m[0].trim() : '';
+}
+function extractNotes(text) {
+  if (!text) return '';
+  return text.replace(/[\r\n]+/g,' ')
+    .replace(/https?:\/\/[^\s,;"'<>]+/gi,'')
+    .replace(/(?:www\.)?([a-z0-9][-a-z0-9]*\.)+(com|net|org|au|uk|nz|ca|io|co)(?:\.[a-z]{2,})?/gi,'')
+    .replace(/\+?\d[\d\s\-()]{7,}/g,'')
+    .replace(/^[\s,;.]+|[\s,;.]+$/g,'').trim();
+}
+function nameFromUrl(url) {
+  try { const h = new URL(url).hostname.replace(/^www\./,''); return h.split('.')[0].replace(/[-_]/g,' ').replace(/^\w/,c=>c.toUpperCase()); } catch { return ''; }
+}
+function nameFromFacebook(url) {
+  try { const p = url.replace(/[#?].*$/,'').split('/').filter(Boolean).pop()||'';
+    if (p && !p.includes('profile.php')) return p.replace(/[-_]/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+  } catch {} return '';
+}
+
+// ─── MAP ROW TO LEAD ───
+function mapRowToLead(row, index) {
+  const keys = Object.keys(row);
+  const findCol = (...patterns) => { const k = keys.find(k => patterns.some(p => k.includes(p))); return k ? row[k]||'' : ''; };
+
+  let email = findCol('email','mail','e-mail');
+  let facebook = findCol('facebook','fb').replace(/#+$/,'').trim();
+  let task = findCol('task');
+  let directWebsite = findCol('website','site','url','domain');
+  let phone = findCol('phone','tel','mobile');
+
+  let website = directWebsite || extractWebsite(task);
+  if (!phone) phone = extractPhone(task);
+  let notes = extractNotes(task);
+  const taskLower = (task||'').toLowerCase();
+  const hasNoWebsite = taskLower.includes('no website') || (taskLower.includes('website') && taskLower.includes('not working'));
+
+  if (!website) {
+    for (const k of keys) {
+      const ex = extractWebsite(row[k]||'');
+      if (ex && !ex.includes('facebook.com') && !ex.includes('fb.com')) { website = ex; break; }
+    }
+  }
+  if (!facebook) {
+    for (const k of keys) {
+      const v = row[k]||'';
+      if (v.includes('facebook.com') || v.includes('fb.com')) { facebook = v.replace(/#+$/,'').trim(); break; }
+    }
+  }
+
+  let name = '';
+  if (website) name = nameFromUrl(website);
+  if (!name && facebook) name = nameFromFacebook(facebook);
+  if (!website && !facebook && !email) return null;
+  if (!website && hasNoWebsite && !notes) notes = 'No website';
+
+  return { id: Date.now() + index + Math.random(), name, email, website, facebook, phone, notes, status:'new', analysis:null, generatedEmail:null, generatedSubject:null };
+}
+
+// ─── FILE UPLOAD ───
+function handleFileUpload(e) {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try {
+      const rows = parseCSV(ev.target.result);
+      addLog(`Parsed ${rows.length} rows. Mapping...`);
+      if (rows.length > 0) addLog(`Columns: ${Object.keys(rows[0]).join(', ')}`);
+      const newLeads = rows.map((r,i) => mapRowToLead(r,i)).filter(Boolean);
+      const withSites = newLeads.filter(l => l.website).length;
+      const fbOnly = newLeads.filter(l => !l.website && l.facebook).length;
+      leads = [...leads, ...newLeads];
+      addLog(`Imported ${newLeads.length} leads — ${withSites} with websites, ${fbOnly} Facebook-only`, 'success');
+      renderAll();
+    } catch (err) { addLog('CSV parse error: ' + err.message, 'error'); }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+// ─── ANALYZE WEBSITE ───
+async function analyzeWebsite(lead) {
+  if (!lead.website) { addLog(`No website for ${lead.name||'lead'} — skipping`, 'warn'); return null; }
+  setProcessing(lead.id, 'analyzing');
+  addLog(`Analyzing ${lead.website}...`);
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514', max_tokens:1000,
+        tools:[{type:'web_search_20250305',name:'web_search'}],
+        messages:[{role:'user',content:`Visit and analyze this website: ${lead.website}
+
+You are a web design and digital marketing expert at Vital Web Solution. Analyze this website and identify 2-3 specific, actionable weaknesses in their:
+- Landing page design and conversion optimization
+- Page speed / mobile responsiveness
+- Call-to-action placement and clarity
+- Trust signals (testimonials, reviews, certifications)
+- SEO basics (meta tags, headings structure)
+
+Be specific. Keep it concise — 3-4 bullet points max. Also try to find the business owner's email or contact email from the website.
+
+Respond in this exact JSON format only, no markdown:
+{"analysis": "bullet point analysis text", "email_found": "email@example.com or null", "company_name": "detected company name", "industry": "detected industry"}`}]
+      })
+    });
+    const data = await resp.json();
+    const tb = data.content?.find(b => b.type==='text');
+    if (tb) {
+      try {
+        const parsed = JSON.parse(tb.text.replace(/```json|```/g,'').trim());
+        clearProcessing(lead.id);
+        addLog(`Analysis done for ${lead.website}`, 'success');
+        return parsed;
+      } catch { clearProcessing(lead.id); return { analysis: tb.text, email_found: null }; }
+    }
+  } catch(err) { addLog(`Error: ${err.message}`, 'error'); }
+  clearProcessing(lead.id);
+  return null;
+}
+
+// ─── GENERATE EMAIL ───
+async function generateEmail(lead) {
+  setProcessing(lead.id, 'generating');
+  addLog(`Generating email for ${lead.name||lead.email}...`);
+  try {
+    const pitch = document.getElementById('setPitch').value;
+    const subjectTpl = document.getElementById('setSubject').value;
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514', max_tokens:1000,
+        messages:[{role:'user',content:`You are Ammar Haq, Founder of Vital Web Solution. Write a cold email to this lead.
+
+Lead info:
+- Name/Business: ${lead.name||'Business Owner'}
+- Website: ${lead.website||'N/A'}
+- Email: ${lead.email||'N/A'}
+- Industry: ${lead.industry||'Unknown'}
+- Website Analysis: ${lead.analysis||'No analysis available'}
+
+Email template to follow (adapt and personalize):
+${pitch}
+
+Subject line template: ${subjectTpl}
+
+Rules:
+- Keep it under 150 words
+- Be specific about THEIR website issues
+- Sound human, not salesy
+- Include a clear CTA
+
+Respond in this exact JSON format only, no markdown:
+{"subject": "personalized subject line", "body": "the full email body"}`}]
+      })
+    });
+    const data = await resp.json();
+    const tb = data.content?.find(b => b.type==='text');
+    if (tb) {
+      const parsed = JSON.parse(tb.text.replace(/```json|```/g,'').trim());
+      clearProcessing(lead.id);
+      addLog(`Email generated for ${lead.name||lead.email}`, 'success');
+      return parsed;
+    }
+  } catch(err) { addLog(`Error: ${err.message}`, 'error'); }
+  clearProcessing(lead.id);
+  return null;
+}
+
+// ─── ANALYZE + GENERATE SINGLE LEAD ───
+async function analyzeAndGenerate(leadId) {
+  const lead = leads.find(l => l.id === leadId);
+  if (!lead) return;
+
+  const analysis = await analyzeWebsite(lead);
+  if (analysis) {
+    lead.analysis = analysis.analysis;
+    if (!lead.email && analysis.email_found) lead.email = analysis.email_found;
+    if (analysis.industry) lead.industry = analysis.industry;
+    if (!lead.name && analysis.company_name) lead.name = analysis.company_name;
+    lead.status = 'analyzed';
+    renderAll();
+
+    const email = await generateEmail(lead);
+    if (email) {
+      lead.generatedEmail = email.body;
+      lead.generatedSubject = email.subject;
+      lead.status = 'ready';
+      renderAll();
+    }
+  }
+}
+
+// ─── SEND (OPEN GMAIL) ───
+function sendEmail(lead) {
+  if (!lead.email || !lead.generatedEmail) {
+    addLog(`Cannot send — missing email or content for ${lead.name}`, 'error');
+    return false;
+  }
+  const subject = encodeURIComponent(lead.generatedSubject || 'Quick thought on your website');
+  const body = encodeURIComponent(lead.generatedEmail);
+  const to = encodeURIComponent(lead.email);
+  const url = `https://mail.google.com/mail/?view=cm&to=${to}&su=${subject}&body=${body}`;
+  window.open(url, '_blank');
+  lead.status = 'sent';
+  addLog(`Gmail opened for ${lead.email}`, 'success');
+  renderAll();
+  return true;
+}
+
+// ─── COPY EMAIL ───
+function copyEmail(leadId) {
+  const lead = leads.find(l => l.id === leadId);
+  if (!lead) return;
+  navigator.clipboard.writeText(`Subject: ${lead.generatedSubject}\n\n${lead.generatedEmail}`);
+  addLog(`Email copied for ${lead.name||lead.email}`, 'success');
+}
+
+// ─── BULK ACTIONS ───
+async function bulkProcess() {
+  const toProcess = leads.filter(l => selectedLeads.size === 0 || selectedLeads.has(l.id));
+  document.getElementById('btnProcess').disabled = true;
+  document.getElementById('btnProcess').innerHTML = '<span class="spinner"></span> Processing...';
+  for (const lead of toProcess) {
+    if (lead.status === 'new' || !lead.generatedEmail) {
+      await analyzeAndGenerate(lead.id);
+    }
+  }
+  document.getElementById('btnProcess').disabled = false;
+  document.getElementById('btnProcess').innerHTML = '🔍 Analyze & Generate All';
+  addLog(`Bulk processing done for ${toProcess.length} leads`, 'success');
+}
+
+async function bulkSendAll() {
+  const ready = leads.filter(l => (selectedLeads.size===0 || selectedLeads.has(l.id)) && l.status==='ready' && l.generatedEmail && l.email);
+  if (!ready.length) return;
+  if (!confirm(`This will open ${ready.length} Gmail compose tabs (one every 1.5s). Allow popups.\n\nContinue?`)) return;
+  addLog(`Opening ${ready.length} Gmail tabs...`);
+  for (let i = 0; i < ready.length; i++) {
+    sendEmail(ready[i]);
+    if (i < ready.length - 1) await new Promise(r => setTimeout(r, 1500));
+  }
+  addLog(`Done! ${ready.length} Gmail tabs opened.`, 'success');
+}
+
+// ─── LEAD MANAGEMENT ───
+function removeLead(id) {
+  leads = leads.filter(l => l.id !== id);
+  selectedLeads.delete(id);
+  renderAll();
+}
+function toggleSelectAll() {
+  const all = document.getElementById('selectAll').checked;
+  if (all) leads.forEach(l => selectedLeads.add(l.id));
+  else selectedLeads.clear();
+  renderAll();
+}
+function toggleSelect(id) {
+  selectedLeads.has(id) ? selectedLeads.delete(id) : selectedLeads.add(id);
+  renderAll();
+}
+
+// ─── ADD LEAD MODAL ───
+function showAddLeadModal() { document.getElementById('addLeadModal').classList.remove('hidden'); }
+function hideAddLeadModal() { document.getElementById('addLeadModal').classList.add('hidden'); }
+function addManualLead() {
+  const name = document.getElementById('newName').value.trim();
+  const email = document.getElementById('newEmail').value.trim();
+  const website = document.getElementById('newWebsite').value.trim();
+  const facebook = document.getElementById('newFacebook').value.trim();
+  if (!website && !email && !facebook) return;
+  leads.push({ id: Date.now(), name, email, website, facebook, phone:'', notes:'', status:'new', analysis:null, generatedEmail:null, generatedSubject:null });
+  ['newName','newEmail','newWebsite','newFacebook'].forEach(id => document.getElementById(id).value='');
+  hideAddLeadModal();
+  addLog('Lead added manually', 'success');
+  renderAll();
+}
+
+// ─── EDIT EMAIL MODAL ───
+function showEditModal(id) {
+  editingLeadId = id;
+  const lead = leads.find(l => l.id === id);
+  document.getElementById('editTitle').textContent = `Edit Email — ${lead.name||lead.email}`;
+  document.getElementById('editSubject').value = lead.generatedSubject || '';
+  document.getElementById('editBody').value = lead.generatedEmail || '';
+  document.getElementById('editEmailModal').classList.remove('hidden');
+}
+function hideEditModal() {
+  if (editingLeadId) {
+    const lead = leads.find(l => l.id === editingLeadId);
+    if (lead) {
+      lead.generatedSubject = document.getElementById('editSubject').value;
+      lead.generatedEmail = document.getElementById('editBody').value;
+    }
+  }
+  editingLeadId = null;
+  document.getElementById('editEmailModal').classList.add('hidden');
+  renderAll();
+}
+function saveAndCopyEdit() {
+  if (editingLeadId) copyEmail(editingLeadId);
+  hideEditModal();
+}
+async function regenerateEditing() {
+  if (!editingLeadId) return;
+  const lead = leads.find(l => l.id === editingLeadId);
+  if (!lead) return;
+  const email = await generateEmail(lead);
+  if (email) {
+    lead.generatedEmail = email.body;
+    lead.generatedSubject = email.subject;
+    document.getElementById('editSubject').value = email.subject;
+    document.getElementById('editBody').value = email.body;
+    renderAll();
+  }
+}
+
+// ─── SETTINGS ───
+function toggleSettings() { document.getElementById('settingsModal').classList.toggle('hidden'); }
+
+// ─── TABS ───
+function switchTab(tab) {
+  ['leads','emails','logs'].forEach(t => {
+    document.getElementById('tab-'+t).classList.toggle('hidden', t !== tab);
+    document.querySelector(`.tab[data-tab="${t}"]`).classList.toggle('active', t === tab);
+  });
+  if (tab === 'emails') renderEmails();
+}
+
+// ─── LOGGING ───
+function addLog(msg, type='info') {
+  logs.unshift({ msg, type, time: new Date().toLocaleTimeString() });
+  if (logs.length > 100) logs.pop();
+  renderLogs();
+}
+
+// ─── PROCESSING STATE ───
+function setProcessing(id, state) { processing[id] = state; renderAll(); }
+function clearProcessing(id) { delete processing[id]; renderAll(); }
+
+// ─── RENDER ───
+function renderAll() {
+  renderStats();
+  renderLeads();
+  renderEmails();
+  renderLogs();
+}
+
+function renderStats() {
+  document.getElementById('stat-total').textContent = leads.length;
+  document.getElementById('stat-analyzed').textContent = leads.filter(l => l.analysis).length;
+  const ready = leads.filter(l => l.status === 'ready').length;
+  document.getElementById('stat-ready').textContent = ready;
+  document.getElementById('stat-sent').textContent = leads.filter(l => l.status === 'sent').length;
+  document.getElementById('readyCount').textContent = ready;
+
+  const hasLeads = leads.length > 0;
+  document.getElementById('btnProcess').style.display = hasLeads ? '' : 'none';
+  document.getElementById('btnSendAll').style.display = hasLeads ? '' : 'none';
+  document.getElementById('emptyState').style.display = hasLeads ? 'none' : '';
+  document.getElementById('leadsTableCard').style.display = hasLeads ? '' : 'none';
+}
+
+function renderLeads() {
+  const tbody = document.getElementById('leadsBody');
+  tbody.innerHTML = leads.map(lead => {
+    const proc = processing[lead.id];
+    const badgeClass = lead.status==='sent'?'badge-green':lead.status==='ready'?'badge-blue':lead.status==='analyzed'?'badge-yellow':'badge-gray';
+    const statusText = proc || lead.status;
+    const fbDisplay = lead.facebook
+      ? (lead.facebook.includes('profile.php') ? 'FB Profile' : (lead.facebook.split('/').filter(Boolean).pop()||'').slice(0,20))
+      : '';
+
+    return `<tr>
+      <td><input type="checkbox" ${selectedLeads.has(lead.id)?'checked':''} onchange="toggleSelect(${lead.id})"></td>
+      <td>
+        <div class="lead-name">${lead.name||'—'}</div>
+        ${lead.industry?`<div class="lead-industry">${lead.industry}</div>`:''}
+        ${lead.notes?`<div class="lead-notes">${lead.notes}</div>`:''}
+      </td>
+      <td>${lead.website?`<a href="${lead.website}" target="_blank">${lead.website.replace(/https?:\/\/(www\.)?/,'').slice(0,28)}</a>`:'<span class="muted">—</span>'}</td>
+      <td>${lead.facebook?`<a href="${lead.facebook}" target="_blank" style="color:#60a5fa;font-size:12px">${fbDisplay}</a>`:'<span class="muted">—</span>'}</td>
+      <td>
+        ${lead.email?`<div class="mono" style="font-size:12px">${lead.email}</div>`:'<span class="muted">not found</span>'}
+        ${lead.phone?`<div style="font-size:11px;color:#94a3b8;margin-top:2px">${lead.phone}</div>`:''}
+      </td>
+      <td><span class="badge ${badgeClass}">${proc?`<span class="spinner" style="width:10px;height:10px;border-width:1.5px;margin-right:4px"></span>`:''}${statusText}</span></td>
+      <td>
+        <div class="actions">
+          ${!lead.generatedEmail?`<button class="btn btn-sm" onclick="analyzeAndGenerate(${lead.id})" ${proc?'disabled':''}>${proc?'<span class="spinner"></span>':'🔍'}</button>`:''}
+          ${lead.generatedEmail?`
+            <button class="btn btn-sm" onclick="showEditModal(${lead.id})">✏</button>
+            <button class="btn btn-sm" onclick="copyEmail(${lead.id})">📋</button>
+            ${lead.status!=='sent'&&lead.email?`<button class="btn btn-send" onclick="sendEmail(leads.find(l=>l.id===${lead.id}))">📨</button>`:''}
+          `:''}
+          <button class="btn btn-danger" onclick="removeLead(${lead.id})">🗑</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function renderEmails() {
+  const withEmails = leads.filter(l => l.generatedEmail);
+  document.getElementById('noEmails').style.display = withEmails.length ? 'none' : '';
+  document.getElementById('emailsList').innerHTML = withEmails.map(lead => `
+    <div class="card email-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+        <div>
+          <div style="font-size:14px;font-weight:600">To: ${lead.email||'No email'}</div>
+          <div style="font-size:12px;color:#64748b">${lead.name} • ${lead.website}</div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <span class="badge ${lead.status==='sent'?'badge-green':'badge-blue'}">${lead.status}</span>
+          <button class="btn btn-sm" onclick="copyEmail(${lead.id})">📋 Copy</button>
+          ${lead.status!=='sent'&&lead.email?`<button class="btn btn-primary" style="padding:6px 14px;font-size:12px" onclick="sendEmail(leads.find(l=>l.id===${lead.id}))">📨 Send</button>`:''}
+        </div>
+      </div>
+      <div class="email-body">
+        <div class="email-subject">Subject: ${lead.generatedSubject||''}</div>
+        <div class="email-text">${lead.generatedEmail||''}</div>
+      </div>
+      ${lead.analysis?`<details style="margin-top:10px"><summary style="font-size:12px;color:#6366f1;cursor:pointer">View Analysis</summary><div style="font-size:12px;color:#94a3b8;margin-top:8px;line-height:1.6;white-space:pre-wrap">${lead.analysis}</div></details>`:''}
+    </div>
+  `).join('');
+}
+
+function renderLogs() {
+  const container = document.getElementById('logsContainer');
+  if (!logs.length) { container.innerHTML = '<div style="color:#4b5563;font-size:13px;text-align:center;padding:40px">No activity yet</div>'; return; }
+  container.innerHTML = logs.map(log => {
+    const dotColor = log.type==='success'?'#4ade80':log.type==='error'?'#f87171':log.type==='warn'?'#fbbf24':'#64748b';
+    return `<div class="log-entry"><span class="log-time">${log.time}</span><span class="log-dot" style="background:${dotColor}"></span><span style="color:${log.type==='error'?'#fca5a5':'#c8ccd4'}">${log.msg}</span></div>`;
+  }).join('');
+}
+
+// Initial render
+renderAll();
+</script>
+</body>
+</html>
