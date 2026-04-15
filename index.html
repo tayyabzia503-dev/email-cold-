@@ -458,7 +458,7 @@ function handleFileUpload(e) {
 async function analyzeWebsite(lead) {
   if (!lead.website) { addLog(`No website for ${lead.name||'lead'} — skipping`, 'warn'); return null; }
   const apiKey = getApiKey();
-  if (!apiKey) { addLog('Add your Anthropic API key in Settings first!', 'error'); toggleSettings(); return null; }
+  if (!apiKey) { addLog('⚠ Add your Anthropic API key in Settings first!', 'error'); toggleSettings(); return null; }
   setProcessing(lead.id, 'analyzing');
   addLog(`Analyzing ${lead.website}...`);
   try {
@@ -466,23 +466,31 @@ async function analyzeWebsite(lead) {
       method:'POST', headers:{'Content-Type':'application/json','x-api-key':apiKey},
       body: JSON.stringify({
         model:'claude-sonnet-4-20250514', max_tokens:1000,
-        tools:[{type:'web_search_20250305',name:'web_search'}],
-        messages:[{role:'user',content:`Visit and analyze this website: ${lead.website}
+        messages:[{role:'user',content:`You are a web design and digital marketing expert at Vital Web Solution. Analyze this website: ${lead.website}
 
-You are a web design and digital marketing expert at Vital Web Solution. Analyze this website and identify 2-3 specific, actionable weaknesses in their:
+Identify 2-3 specific, actionable weaknesses in their:
 - Landing page design and conversion optimization
 - Page speed / mobile responsiveness
 - Call-to-action placement and clarity
 - Trust signals (testimonials, reviews, certifications)
 - SEO basics (meta tags, headings structure)
 
-Be specific. Keep it concise — 3-4 bullet points max. Also try to find the business owner's email or contact email from the website.
+Be specific. Keep it concise — 3-4 bullet points max. Also try to find the business owner's email or contact email.
 
-Respond in this exact JSON format only, no markdown:
+Respond in this exact JSON format only, no markdown, no code fences:
 {"analysis": "bullet point analysis text", "email_found": "email@example.com or null", "company_name": "detected company name", "industry": "detected industry"}`}]
       })
     });
     const data = await resp.json();
+
+    // Check for API errors
+    if (!resp.ok) {
+      const errMsg = data.error?.message || data.error || `API error ${resp.status}`;
+      addLog(`API Error: ${errMsg}`, 'error');
+      clearProcessing(lead.id);
+      return null;
+    }
+
     const tb = data.content?.find(b => b.type==='text');
     if (tb) {
       try {
@@ -490,9 +498,15 @@ Respond in this exact JSON format only, no markdown:
         clearProcessing(lead.id);
         addLog(`Analysis done for ${lead.website}`, 'success');
         return parsed;
-      } catch { clearProcessing(lead.id); return { analysis: tb.text, email_found: null }; }
+      } catch {
+        clearProcessing(lead.id);
+        addLog(`Analysis done (raw text) for ${lead.website}`, 'success');
+        return { analysis: tb.text, email_found: null };
+      }
+    } else {
+      addLog(`No text response from API for ${lead.website}`, 'warn');
     }
-  } catch(err) { addLog(`Error: ${err.message}`, 'error'); }
+  } catch(err) { addLog(`Error analyzing: ${err.message}`, 'error'); }
   clearProcessing(lead.id);
   return null;
 }
@@ -502,7 +516,7 @@ async function generateEmail(lead) {
   setProcessing(lead.id, 'generating');
   addLog(`Generating email for ${lead.name||lead.email}...`);
   const apiKey = getApiKey();
-  if (!apiKey) { addLog('Add your Anthropic API key in Settings first!', 'error'); clearProcessing(lead.id); return null; }
+  if (!apiKey) { addLog('⚠ Add your Anthropic API key in Settings first!', 'error'); clearProcessing(lead.id); return null; }
   try {
     const pitch = document.getElementById('setPitch').value;
     const subjectTpl = document.getElementById('setSubject').value;
@@ -535,14 +549,30 @@ Respond in this exact JSON format only, no markdown:
       })
     });
     const data = await resp.json();
+
+    if (!resp.ok) {
+      const errMsg = data.error?.message || data.error || `API error ${resp.status}`;
+      addLog(`API Error: ${errMsg}`, 'error');
+      clearProcessing(lead.id);
+      return null;
+    }
+
     const tb = data.content?.find(b => b.type==='text');
     if (tb) {
-      const parsed = JSON.parse(tb.text.replace(/```json|```/g,'').trim());
-      clearProcessing(lead.id);
-      addLog(`Email generated for ${lead.name||lead.email}`, 'success');
-      return parsed;
+      try {
+        const parsed = JSON.parse(tb.text.replace(/```json|```/g,'').trim());
+        clearProcessing(lead.id);
+        addLog(`Email generated for ${lead.name||lead.email}`, 'success');
+        return parsed;
+      } catch {
+        addLog(`Could not parse email response — using raw text`, 'warn');
+        clearProcessing(lead.id);
+        return { subject: 'Quick thought on your website', body: tb.text };
+      }
+    } else {
+      addLog(`No text response from API`, 'warn');
     }
-  } catch(err) { addLog(`Error: ${err.message}`, 'error'); }
+  } catch(err) { addLog(`Error generating: ${err.message}`, 'error'); }
   clearProcessing(lead.id);
   return null;
 }
