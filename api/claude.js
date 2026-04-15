@@ -1,5 +1,8 @@
+export const config = {
+  maxDuration: 60,
+};
+
 export default async function handler(req, res) {
-  // Handle CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-api-key');
@@ -14,7 +17,7 @@ export default async function handler(req, res) {
 
   const apiKey = req.headers['x-api-key'];
   if (!apiKey) {
-    return res.status(401).json({ error: 'Missing API key. Add your Anthropic API key in Settings.' });
+    return res.status(401).json({ error: 'Missing API key' });
   }
 
   try {
@@ -29,12 +32,7 @@ export default async function handler(req, res) {
     });
 
     const data = await response.json();
-
-    if (!response.ok) {
-      return res.status(response.status).json(data);
-    }
-
-    return res.status(200).json(data);
+    return res.status(response.status).json(data);
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }
